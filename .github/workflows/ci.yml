@@ -42,7 +42,8 @@ jobs:
             fi
             echo "Attempt $i: waiting for service..."
             sleep 2
-          > exit 1
+          done
+          exit 1
 
       - name: Smoke test
         run: |
