@@ -6,7 +6,8 @@ import numpy as np
 import requests
 
 url, wav, n = sys.argv[1], sys.argv[2], int(sys.argv[3])
-data = open(wav, "rb").read()
+with open(wav, "rb") as f:
+    data = f.read()
 s = requests.Session()
 
 

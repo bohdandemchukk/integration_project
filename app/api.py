@@ -9,7 +9,14 @@ import torch
 import torchaudio
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
-from app.config import ARTIFACTS_DIR, LOG_LEVEL, MODEL_PATH, MODEL_VERSION, NUM_THREADS, SAMPLE_RATE
+from app.config import (
+    ARTIFACTS_DIR,
+    LOG_LEVEL,
+    MODEL_PATH,
+    MODEL_VERSION,
+    NUM_THREADS,
+    SAMPLE_RATE,
+)
 from app.data import waveform_to_mel
 from app.model import SmallCNN
 
@@ -49,13 +56,13 @@ def model_info():
 
 
 @app.post("/predict")
-def predict(file: UploadFile = File(...)):
+def predict(file: UploadFile = File(...)): # noqa: B008
     data = file.file.read()
     if not data:
         raise HTTPException(status_code=400, detail="Порожній файл")
     try:
         waveform, sr = torchaudio.load(io.BytesIO(data))
-    except Exception:
+    except Exception: # noqa: BLE001
         raise HTTPException(status_code=400, detail="Не вдалося прочитати WAV-файл")
 
     t0 = time.perf_counter()  # лише препроцесинг + інференс
