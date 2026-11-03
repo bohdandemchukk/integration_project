@@ -34,10 +34,15 @@ jobs:
       - name: Run container
         run: |
           docker run -d --name kws -p 8000:8000 kws-api:${{ github.sha }}
+          echo "Waiting for container to start..."
           for i in $(seq 1 30); do
-            curl -sf http://localhost:8000/health && break
+            if curl -s http://localhost:8000/health | grep -q "ok"; then
+              echo "Container is up and running!"
+              exit 0
+            fi
+            echo "Attempt $i: waiting for service..."
             sleep 2
-          done
+          > exit 1
 
       - name: Smoke test
         run: |
