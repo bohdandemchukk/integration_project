@@ -1,0 +1,56 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      ACC_THRESHOLD: "80"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint
+        run: |
+          pip install ruff
+          ruff check app/ scripts/
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: kws-api:${{ github.sha }}
+          build-args: |
+            EPOCHS=2
+            VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run container
+        run: |
+          docker run -d --name kws -p 8000:8000 kws-api:${{ github.sha }}
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && break
+            sleep 2
+          done
+
+      - name: Smoke test
+        run: |
+          curl -sf http://localhost:8000/health
+          curl -sf http://localhost:8000/model-info
+          curl -sf -X POST -F "file=@samples/yes.wav" http://localhost:8000/predict
+
+      - name: Accuracy gate
+        run: |
+          ACC=$(curl -s http://localhost:8000/model-info | jq '.accuracy')
+          echo "accuracy=$ACC threshold=$ACC_THRESHOLD"
+          awk -v a="$ACC" -v t="$ACC_THRESHOLD" 'BEGIN{exit !(a >= t)}'
+
+      - name: Logs on failure
+        if: failure()
+        run: docker logs kws
