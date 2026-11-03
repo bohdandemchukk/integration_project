@@ -49,7 +49,7 @@ jobs:
         run: |
           curl -sf http://localhost:8000/health
           curl -sf http://localhost:8000/model-info
-          curl -sf -X POST -F "file=@samples/yes.wav" http://localhost:8000/predict
+          curl -sf -X POST -F "file=@samples/sample.wav" http://localhost:8000/predict
 
       - name: Accuracy gate
         run: |
